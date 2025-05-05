@@ -2,33 +2,71 @@ const express = require("express");
 const { createClient } = require("redis");
 
 const app = express();
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
+const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
-const redisClient = createClient({
-  url: process.env.REDIS_URL || "redis://localhost:6390",
-});
-
-redisClient.on("error", (err) => console.error("Redis Client Error", err));
+const redis = createClient({ url: REDIS_URL });
+redis.on("error", (err) => console.error("Redis Client Error", err));
 
 (async () => {
-  await redisClient.connect();
-  console.log("Connected to Redis");
+  await redis.connect();
+  console.log("✅ Connected to Redis");
 })();
 
-app.get("/", async (req, res) => {
+// Create a new task
+app.post("/tasks", async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: "Missing `text` in body" });
+
   try {
-    const hits = await redisClient.incr("hits");
-    res.json({
-      message: "Hello from Paulo and Guy!",
-      hits,
-    });
+    // generate a new ID
+    const id = await redis.incr("nextTaskId");
+    const key = `task:${id}`;
+    // store hash { id, text }
+    await redis.hSet(key, { id, text });
+    // add to set of all task IDs
+    await redis.sAdd("tasks", id.toString());
+    res.status(201).json({ id, text });
   } catch (err) {
-    console.error("Redis error", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(err);
+    res.status(500).json({ error: "Could not create task" });
   }
 });
 
-// 5. הפעלת השרת
+// List all tasks
+app.get("/tasks", async (req, res) => {
+  try {
+    const ids = await redis.sMembers("tasks"); // ["1","2",...]
+    const pipeline = redis.multi();
+    ids.forEach((id) => pipeline.hGetAll(`task:${id}`));
+    const tasks = await pipeline.exec();
+    res.json(tasks.map((t) => ({ id: t.id, text: t.text })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch tasks" });
+  }
+});
+
+// Delete one task
+app.delete("/tasks/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const key = `task:${id}`;
+    const existed = await redis.del(key);
+    if (existed) {
+      await redis.sRem("tasks", id);
+      return res.json({ deleted: id });
+    } else {
+      return res.status(404).json({ error: "Not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not delete task" });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`Web service listening on http://localhost:${PORT}`);
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
 });
