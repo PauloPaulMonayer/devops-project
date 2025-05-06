@@ -68,6 +68,23 @@ app.get("/tasks/:id", async (req, res) => {
   }
 });
 
+// Update a task by ID
+app.put("/tasks/:id", async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: "Missing text in body" });
+
+  try {
+    const key = 'task:${req.params.id}';
+    const existed = await redis.exists(key);
+    if (!existed) return res.status(404).json({ error: "Not found" });
+    await redis.hSet(key, "text", text);
+    res.json({ id: parseInt(req.params.id, 10), text });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update task" });
+  }
+});
+
 // Delete one task
 app.delete("/tasks/:id", async (req, res) => {
   const id = req.params.id;
