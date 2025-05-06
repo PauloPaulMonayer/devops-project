@@ -165,6 +165,15 @@ GET /tasks
   { "id": 2, "text": "Walk dog" }
 ]
 ```
+### Get Task By ID
+```http
+GET /tasks/ID
+```
+
+### Update Task By ID
+```http
+PUT /tasks/ID
+```
 
 ### Delete a Task
 
@@ -198,21 +207,7 @@ Configure on **GitHub → Settings → Branches** for `main`:
 2. Require at least **1** approving review
 3. Require conversation resolution before merge
 
----
 
-## Evaluation Criteria
-
-- **Repository Configuration** (5%)
-- **Pull Requests** (20%)
-- **Merged PRs** (5%)
-- **Functionality** (40%)
-- **Docker Files** (10%)
-- **Documentation** (10%)
-- **Data Persistence** (5%)
-- **Project Organization** (5%)
-- **Bonus Diagram** (10%)
-
----
 
 ## Bonus: Architecture Diagram
 
