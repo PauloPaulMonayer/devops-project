@@ -23,15 +23,12 @@ app.get("/health", (req, res) => {
 // Create a new task
 app.post("/tasks", async (req, res) => {
   const { text } = req.body;
-  if (!text) return res.status(400).json({ error: "Missing text in body" });
+  if (!text) return res.status(400).json({ error: "Missing `text` in body" });
 
   try {
-    // generate a new ID
     const id = await redis.incr("nextTaskId");
-    const key = 'task:${id}';
-    // store hash { id, text }
+    const key = `task:${id}`;
     await redis.hSet(key, { id, text });
-    // add to set of all task IDs
     await redis.sAdd("tasks", id.toString());
     res.status(201).json({ id, text });
   } catch (err) {
@@ -43,11 +40,12 @@ app.post("/tasks", async (req, res) => {
 // List all tasks
 app.get("/tasks", async (req, res) => {
   try {
-    const ids = await redis.sMembers("tasks"); // ["1","2",...]
+    const ids = await redis.sMembers("tasks");
     const pipeline = redis.multi();
-    ids.forEach((id) => pipeline.hGetAll('task:${id}'));
-    const tasks = await pipeline.exec();
-    res.json(tasks.map((t) => ({ id: t.id, text: t.text })));
+    ids.forEach((id) => pipeline.hGetAll(`task:${id}`));
+    const raw = await pipeline.exec();
+    const tasks = raw.map((t) => ({ id: t.id, text: t.text }));
+    res.json(tasks);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch tasks" });
@@ -57,7 +55,7 @@ app.get("/tasks", async (req, res) => {
 // Get single task by ID
 app.get("/tasks/:id", async (req, res) => {
   try {
-    const key = 'task:${req.params.id}';
+    const key = `task:${req.params.id}`;
     const exists = await redis.exists(key);
     if (!exists) return res.status(404).json({ error: "Not found" });
     const data = await redis.hGetAll(key);
@@ -71,32 +69,28 @@ app.get("/tasks/:id", async (req, res) => {
 // Update a task by ID
 app.put("/tasks/:id", async (req, res) => {
   const { text } = req.body;
-  if (!text) return res.status(400).json({ error: "Missing text in body" });
+  if (!text) return res.status(400).json({ error: "Missing `text` in body" });
 
   try {
-    const key = 'task:${req.params.id}';
+    const key = `task:${req.params.id}`;
     const existed = await redis.exists(key);
     if (!existed) return res.status(404).json({ error: "Not found" });
     await redis.hSet(key, "text", text);
     res.json({ id: parseInt(req.params.id, 10), text });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Could not update task" });
-  }
+    res.status(500).json({ error: "Could not update task" });
+  }
 });
 
 // Delete one task
 app.delete("/tasks/:id", async (req, res) => {
-  const id = req.params.id;
   try {
-    const key = 'task:${id}';
+    const key = `task:${req.params.id}`;
     const existed = await redis.del(key);
-    if (existed) {
-      await redis.sRem("tasks", id);
-      return res.json({ deleted: id });
-    } else {
-      return res.status(404).json({ error: "Not found" });
-    }
+    if (!existed) return res.status(404).json({ error: "Not found" });
+    await redis.sRem("tasks", req.params.id);
+    res.json({ deleted: req.params.id });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not delete task" });
@@ -104,5 +98,5 @@ app.delete("/tasks/:id", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log('🚀 Server listening on http://localhost:${PORT}');
-})
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
+});
