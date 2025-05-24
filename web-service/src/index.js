@@ -1,3 +1,6 @@
+// The code inside your methods are not readable, Next time please use meaningful names for methods, endpoints and variables also add blank lines after variable declarations and before return statements for better readability.
+// In addition use blank lines to separate logical blocks of code, this will make it easier to read and understand the code.
+
 const express = require("express");
 const { createClient } = require("redis");
 
@@ -15,15 +18,15 @@ redis.on("error", (err) => console.error("Redis Client Error", err));
   console.log("✅ Connected to Redis");
 })();
 
-// health check
+// health check - Commetns on the code should exist only if they add value (In this case, they do not since they are self-explanatory)
 app.get("/health", (req, res) => {
   res.json({ status: "ok", redis: redis.isOpen ? "connected" : "down" });
 });
 
-// Create a new task
-app.post("/tasks", async (req, res) => {
+// Create a new task - Commetns on the code should exist only if they add value (In this case, they do not since they are self-explanatory)
+app.post("/tasks", async (req, res) => { // Use meaningful names for methods, andpoints and variables
   const { text } = req.body;
-  if (!text) return res.status(400).json({ error: "Missing `text` in body" });
+  if (!text) return res.status(400).json({ error: "Missing `text` in body" }); // add blank line before return statement for better readability
 
   try {
     const id = await redis.incr("nextTaskId");
@@ -37,11 +40,11 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-// List all tasks
+// List all tasks - Commetns on the code should exist only if they add value (In this case, they do not since they are self-explanatory)
 app.get("/tasks", async (req, res) => {
   try {
     const ids = await redis.sMembers("tasks");
-    const pipeline = redis.multi();
+    const pipeline = redis.multi(); // Add a blank after variable declaration for better readability
     ids.forEach((id) => pipeline.hGetAll(`task:${id}`));
     const raw = await pipeline.exec();
     const tasks = raw.map((t) => ({ id: t.id, text: t.text }));
@@ -52,12 +55,12 @@ app.get("/tasks", async (req, res) => {
   }
 });
 
-// Get single task by ID
+// Get single task by ID - Commetns on the code should exist only if they add value (In this case, they do not since they are self-explanatory)
 app.get("/tasks/:id", async (req, res) => {
   try {
     const key = `task:${req.params.id}`;
-    const exists = await redis.exists(key);
-    if (!exists) return res.status(404).json({ error: "Not found" });
+    const exists = await redis.exists(key); // Add a blank after variable declaration for better readability
+    if (!exists) return res.status(404).json({ error: "Not found" }); // add blank line before return statement for better readability also Consider new line for return statement for better readability
     const data = await redis.hGetAll(key);
     res.json({ id: data.id, text: data.text });
   } catch (err) {
@@ -66,15 +69,15 @@ app.get("/tasks/:id", async (req, res) => {
   }
 });
 
-// Update a task by ID
+// Update a task by ID - Commetns on the code should exist only if they add value (In this case, they do not since they are self-explanatory)
 app.put("/tasks/:id", async (req, res) => {
-  const { text } = req.body;
-  if (!text) return res.status(400).json({ error: "Missing `text` in body" });
+  const { text } = req.body; // Add a blank after variable declaration for better readability
+  if (!text) return res.status(400).json({ error: "Missing `text` in body" }); // Consider new line for return statement for better readability
 
   try {
     const key = `task:${req.params.id}`;
-    const existed = await redis.exists(key);
-    if (!existed) return res.status(404).json({ error: "Not found" });
+    const existed = await redis.exists(key); // Add a blank after variable declaration for better readability
+    if (!existed) return res.status(404).json({ error: "Not found" }); // add blank line before if statement for better readability
     await redis.hSet(key, "text", text);
     res.json({ id: parseInt(req.params.id, 10), text });
   } catch (err) {
@@ -83,12 +86,12 @@ app.put("/tasks/:id", async (req, res) => {
   }
 });
 
-// Delete one task
+// Delete one task - Commetns on the code should exist only if they add value (In this case, they do not since they are self-explanatory)
 app.delete("/tasks/:id", async (req, res) => {
   try {
     const key = `task:${req.params.id}`;
-    const existed = await redis.del(key);
-    if (!existed) return res.status(404).json({ error: "Not found" });
+    const existed = await redis.del(key); // Add a blank after variable declaration for better readability
+    if (!existed) return res.status(404).json({ error: "Not found" }); // add blank line before if statement for better readability
     await redis.sRem("tasks", req.params.id);
     res.json({ deleted: req.params.id });
   } catch (err) {

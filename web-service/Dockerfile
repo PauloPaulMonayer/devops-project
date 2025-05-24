@@ -17,3 +17,6 @@ EXPOSE 3000
 
 # 6. Start the service
 CMD ["node", "src/index.js"]
+
+
+# All comments can be removed

@@ -1,4 +1,4 @@
-# DevOps Project
+# DevOps Project - There is no description of what the project is about.
 
 A containerized Node.js web service with Redis-backed persistence, orchestrated via Docker Compose.
 
@@ -23,7 +23,7 @@ A containerized Node.js web service with Redis-backed persistence, orchestrated 
 
 ---
 
-## Objective
+## Objective - All the objective can be removed
 
 Build a GitHub-hosted project that demonstrates:
 
@@ -170,7 +170,7 @@ GET /tasks
 GET /tasks/ID
 ```
 
-### Update Task By ID
+### Update Task By ID - missing a json body for PUT
 ```http
 PUT /tasks/ID
 ```
@@ -199,7 +199,7 @@ DELETE /tasks/1
 
 ---
 
-## Branch Protection Rules
+## Branch Protection Rules - Can be removed from readme
 
 Configure on **GitHub → Settings → Branches** for `main`:
 
@@ -219,5 +219,7 @@ flowchart LR
 ```
 
 ---
+
+You forgot to remove this line from the response provided by the AI
 
 **Congratulations!** You now have a fully containerized DevOps project with Redis persistence and comprehensive documentation.
